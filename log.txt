@@ -17,3 +17,4 @@ Pruebas con endpoints de ejemplo en FastAPI.
 Integración inicial de pydantic con validaciones simples.
 Definición de enums para estado emocional y relación.
 Estructura base de operaciones CRUD separadas por dominio.
+Organización del proyecto en módulos: models, operations, main.
