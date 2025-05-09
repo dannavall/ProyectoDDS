@@ -14,3 +14,4 @@ Inicio del proyecto: estructura básica y configuración de entorno virtual.
 Creación de los modelos SQLModel base para mental_health.
 Diseño preliminar de la base de datos PostgreSQL con SQLModel.
 Pruebas con endpoints de ejemplo en FastAPI.
+Integración inicial de pydantic con validaciones simples.
