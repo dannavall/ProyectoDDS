@@ -13,3 +13,4 @@ Refactor de rutas para separar lógica de mental_health y social_media.
 Inicio del proyecto: estructura básica y configuración de entorno virtual.
 Creación de los modelos SQLModel base para mental_health.
 Diseño preliminar de la base de datos PostgreSQL con SQLModel.
+Pruebas con endpoints de ejemplo en FastAPI.
