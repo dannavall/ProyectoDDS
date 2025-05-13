@@ -9,3 +9,4 @@ Manejo de errores en endpoints de creación con HTTPException.
 Documentación inicial para endpoints de SocialMedia.
 Cambio de operaciones sincrónicas a asincrónicas con AsyncSession.
 Agregando validadores personalizados a modelos de SocialMediaCreate.
+Refactor de rutas para separar lógica de mental_health y social_media.
