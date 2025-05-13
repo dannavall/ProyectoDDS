@@ -5,3 +5,4 @@ Fix: error de validación al actualizar registros nulos.
 Creación de índice en base de datos para buscar por edad.
 Revisión de campos faltantes en el modelo MentalHealthUpdate.
 Pruebas manuales del endpoint GET /mental_health funcionando correctamente.
+Manejo de errores en endpoints de creación con HTTPException.
