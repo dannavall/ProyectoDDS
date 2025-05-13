@@ -1,130 +1,72 @@
-import csv
+from typing import List, Optional
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from datetime import datetime
+from cosmetic_models import CosmeticColab, CosmeticColabRead
 
-from typing_extensions import Optional
-from cosmetic_models import CosmeticColab, CosmeticColabWithID, UpdatedCosmeticColab
+class CosmeticOperations:
 
-DATABASE_FILENAME = "cosmetic_colab.csv"
-column_fields = [
-    "id",
-    "marca_maquillaje",
-    "videojuego",
-    "fecha_colaboracion",
-    "tipo_colaboracion",
-    "incremento_ventas_maquillaje"
-]
+    @staticmethod
+    async def get_all_cosmetics(session: AsyncSession) -> List[CosmeticColab]:
+        """Obtiene todos los registros de colaboraciones cosméticas"""
+        result = await session.execute(select(CosmeticColab))
+        return result.scalars().all()
 
-# Mostrar todos los registros
-def read_all_cosmetics():
-    with open(DATABASE_FILENAME, mode="r", newline='', encoding="utf-8") as csvfile:
-        reader = csv.DictReader(csvfile)
-        cosmetics = []
-        for row in reader:
-            row["fecha_colaboracion"] = datetime.strptime(row["fecha_colaboracion"], "%Y-%m-%d").date()
-            row["id"] = int(row["id"])
-            cosmetics.append(CosmeticColabWithID(**row))
-        return cosmetics
+    @staticmethod
+    async def get_cosmetic_by_id(session: AsyncSession, entry_id: int) -> Optional[CosmeticColab]:
+        """Obtiene un registro por su ID"""
+        result = await session.execute(
+            select(CosmeticColab).where(CosmeticColab.id == entry_id)
+        )
+        return result.scalar_one_or_none()
 
-# Mostrar un registro por ID
-def read_one_cosmetic(cosmetic_id: int):
-    with open(DATABASE_FILENAME, mode="r", newline='', encoding="utf-8") as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            if int(row["id"]) == cosmetic_id:
-                return CosmeticColabWithID(**row)
-    return None
+    @staticmethod
+    async def create_cosmetic(session: AsyncSession, data: dict) -> CosmeticColab:
+        """Crea un nuevo registro de colaboración cosmética"""
+        new_entry = CosmeticColab(**data)
+        session.add(new_entry)
+        await session.commit()
+        await session.refresh(new_entry)
+        return new_entry
 
-# Obtener siguiente ID
-def get_next_id():
-    try:
-        with open(DATABASE_FILENAME, mode="r", newline='', encoding="utf-8") as csvfile:
-            reader = csv.DictReader(csvfile)
-            max_id = max(int(row["id"]) for row in reader)
-            return max_id + 1
-    except (FileNotFoundError, ValueError):
-        return 1
+    @staticmethod
+    async def update_cosmetic(session: AsyncSession, entry_id: int, update_data: dict) -> Optional[CosmeticColab]:
+        """Modifica un registro existente"""
+        entry = await session.get(CosmeticColab, entry_id)
+        if not entry:
+            return None
 
-# Escribir un nuevo registro en el CSV
-def write_cosmetic_into_csv(cosmetic: CosmeticColabWithID):
-    with open(DATABASE_FILENAME, mode="a", newline='', encoding="utf-8") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=column_fields)
-        writer.writerow(cosmetic.model_dump())
+        for key, value in update_data.items():
+            if hasattr(entry, key) and value is not None:
+                setattr(entry, key, value)
 
-# Crear nueva colaboración de maquillaje
-def new_cosmetic(cosmetic: CosmeticColab):
-    new_id = get_next_id()
-    cosmetic_with_id = CosmeticColabWithID(id=new_id, **cosmetic.model_dump())
-    write_cosmetic_into_csv(cosmetic_with_id)
-    return cosmetic_with_id
+        await session.commit()
+        await session.refresh(entry)
+        return entry
 
-# Actualizar colaboración
-def modify_cosmetic(cosmetic_id: int, update_data: dict):
-    updated_cosmetic: Optional[CosmeticColabWithID] = None
-    cosmetics = read_all_cosmetics()
-    found = False
+    @staticmethod
+    async def delete_cosmetic(session: AsyncSession, entry_id: int) -> Optional[CosmeticColab]:
+        """Elimina un registro por ID"""
+        entry = await session.get(CosmeticColab, entry_id)
+        if not entry:
+            return None
 
-    for index, collab in enumerate(cosmetics):
-        if collab.id == cosmetic_id:
-            if update_data.get("marca_maquillaje") is not None:
-                collab.marca_maquillaje = update_data["marca_maquillaje"]
-            if update_data.get("videojuego") is not None:
-                collab.videojuego = update_data["videojuego"]
-            if update_data.get("fecha_colaboracion") is not None:
-                collab.fecha_colaboracion = update_data["fecha_colaboracion"]
-            if update_data.get("tipo_colaboracion") is not None:
-                collab.tipo_colaboracion = update_data["tipo_colaboracion"]
-            if update_data.get("incremento_ventas_maquillaje") is not None:
-                collab.incremento_ventas_maquillaje = update_data["incremento_ventas_maquillaje"]
-            updated_cosmetic = collab
-            found = True
-            break
+        await session.delete(entry)
+        await session.commit()
+        return entry
 
-    if found:
-        with open(DATABASE_FILENAME, mode="w", newline='', encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=column_fields)
-            writer.writeheader()
-            for collab in cosmetics:
-                writer.writerow(collab.model_dump())
-        return updated_cosmetic
-    return None
+    @staticmethod
+    async def search_cosmetics_by_brand(session: AsyncSession, brand_name: str) -> List[CosmeticColab]:
+        """Busca registros por marca de maquillaje"""
+        result = await session.execute(
+            select(CosmeticColab).where(CosmeticColab.marca_maquillaje.ilike(f"%{brand_name}%"))
+        )
+        return result.scalars().all()
 
-# Eliminar una colaboración
-def remove_cosmetic(cosmetic_id: int):
-    cosmetics = read_all_cosmetics()
-    deleted_cosmetic: Optional[CosmeticColabWithID] = None
-    remaining_cosmetics = []
-
-    for collab in cosmetics:
-        if collab.id == cosmetic_id:
-            deleted_cosmetic = collab
-        else:
-            remaining_cosmetics.append(collab)
-
-    with open(DATABASE_FILENAME, mode="w", newline='', encoding="utf-8") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=column_fields)
-        writer.writeheader()
-        for collab in remaining_cosmetics:
-            writer.writerow(collab.model_dump())
-
-    if deleted_cosmetic:
-        data_without_id = deleted_cosmetic.model_dump()
-        del data_without_id["id"]
-        return deleted_cosmetic
-    return None
-
-# Buscar colaboraciones por marca de maquillaje
-def search_cosmetics_by_brand(brand_name: str):
-    cosmetics = read_all_cosmetics()
-    filtered_cosmetics = [cosmetic for cosmetic in cosmetics if cosmetic.marca_maquillaje.lower() == brand_name.lower()]
-    return filtered_cosmetics
-
-# Filtrar colaboraciones de maquillaje ordenadas por fecha (más reciente primero)
-def filter_cosmetics_by_recent_date():
-    with open(DATABASE_FILENAME, mode="r", newline='', encoding="utf-8") as csvfile:
-        reader = csv.DictReader(csvfile)
-        cosmetics = [CosmeticColabWithID(**row) for row in reader]
-
-    # Ordenar por fecha (más reciente primero)
-    cosmetics.sort(key=lambda x: x.fecha_colaboracion, reverse=True)
-
-    return cosmetics
+    @staticmethod
+    async def filter_by_recent_date(session: AsyncSession) -> List[CosmeticColab]:
+        """Filtra y ordena por fecha más reciente primero"""
+        result = await session.execute(
+            select(CosmeticColab).order_by(CosmeticColab.fecha_colaboracion.desc())
+        )
+        return result.scalars().all()
