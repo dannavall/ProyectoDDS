@@ -1,14 +1,15 @@
 import os
-from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.orm import sessionmaker
 from pathlib import Path
 
-# Cargar variables de entorno desde utils/.env
-env_path = Path(__file__).parent.parent /"Pictures"/ ".env"
-load_dotenv(env_path)
+# Solo cargar .env si estamos en desarrollo local (Render no lo necesita)
+if os.getenv("RENDER") is None:  # Puedes usar otra condición si prefieres
+    from dotenv import load_dotenv
+    env_path = Path(__file__).parent.parent / "Pictures" / ".env"
+    load_dotenv(env_path)
 
 # Verificar variables críticas antes de continuar
 required_vars = [
@@ -25,14 +26,14 @@ if missing_vars:
 
 # Configuración de la conexión
 CLEVER_DB = (
-    f"postgresql+asyncpg://{os.getenv('POSTGRESQL_ADDON_USER')}:"
+    f"postgresql+asyncpg://{os.getenv('POSTGRESQL_ADDON_USER')}:" 
     f"{os.getenv('POSTGRESQL_ADDON_PASSWORD')}@"
-    f"{os.getenv('POSTGRESQL_ADDON_HOST')}:"
-    f"{os.getenv('POSTGRESQL_ADDON_PORT')}/"
+    f"{os.getenv('POSTGRESQL_ADDON_HOST')}:" 
+    f"{os.getenv('POSTGRESQL_ADDON_PORT')}/" 
     f"{os.getenv('POSTGRESQL_ADDON_DB')}"
 )
 
-# SQLite como fallback (opcional)
+# SQLite como fallback (opcional para desarrollo)
 DATABASE_URL = "sqlite+aiosqlite:///petsdb.db"
 
 # Motor de base de datos principal
