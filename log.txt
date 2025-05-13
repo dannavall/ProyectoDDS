@@ -7,3 +7,4 @@ Revisión de campos faltantes en el modelo MentalHealthUpdate.
 Pruebas manuales del endpoint GET /mental_health funcionando correctamente.
 Manejo de errores en endpoints de creación con HTTPException.
 Documentación inicial para endpoints de SocialMedia.
+Cambio de operaciones sincrónicas a asincrónicas con AsyncSession.
