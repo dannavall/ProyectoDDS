@@ -33,6 +33,9 @@ class CosmeticColabUpdate(SQLModel):
         return v
 
 class CosmeticColabResponse(SQLModel):
+    id: int
     marca_maquillaje: str
     videojuego: str
+    fecha_colaboracion: date
+    tipo_colaboracion: str
     incremento_ventas_maquillaje: str

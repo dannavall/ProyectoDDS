@@ -54,50 +54,57 @@ async def delete_cosmetic_endpoint(cosmetic_id: int, session: AsyncSession = Dep
     deleted = await CosmeticOperations.delete_cosmetic(session, cosmetic_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="La colaboración no fue eliminada")
-    data = deleted.model_dump()
-    data.pop("id", None)
-    return CosmeticColabResponse(**data)
+    return deleted
 
-# -------------------- VIDEOGAMES (SYNC, CSV) --------------------
+# -------------------- VIDEOGAMES (ASYNC, DB) --------------------
 
 @app.get("/videogames", response_model=List[VideogameColabResponse])
-def get_videogames():
-    return VideogameOperations.read_all_videogames()
+async def get_videogames(session: AsyncSession = Depends(get_session)):
+    return await VideogameOperations.get_all_videogames(session)
 
 @app.get("/videogames/search_by_name", response_model=List[VideogameColabResponse])
-def search_by_name(nombre_videojuego: str):
-    results = VideogameOperations.search_videogames_by_name(nombre_videojuego)
+async def search_by_name(nombre_videojuego: str, session: AsyncSession = Depends(get_session)):
+    results = await VideogameOperations.search_videogames_by_name(session, nombre_videojuego)
     if not results:
         raise HTTPException(status_code=404, detail="No se encontraron colaboraciones con ese videojuego")
     return results
 
 @app.get("/videogames/by_date", response_model=List[VideogameColabResponse])
-def get_videogames_by_recent_date():
-    return VideogameOperations.filter_by_recent_date()
+async def get_videogames_by_recent_date(session: AsyncSession = Depends(get_session)):
+    return await VideogameOperations.filter_by_recent_date(session)
 
 @app.get("/videogames/{videogame_id}", response_model=VideogameColabResponse)
-def get_videogame(videogame_id: int):
-    videogame = VideogameOperations.read_one_videogame(videogame_id)
+async def get_videogame(videogame_id: int, session: AsyncSession = Depends(get_session)):
+    videogame = await VideogameOperations.get_videogame_by_id(session, videogame_id)
     if not videogame:
         raise HTTPException(status_code=404, detail="Colaboración de videojuego no encontrada")
     return videogame
 
 @app.post("/videogames", response_model=VideogameColabResponse)
-def create_videogame_endpoint(videogame: VideogameColabCreate):
-    return VideogameOperations.create_videogame(videogame.model_dump())
+async def create_videogame_endpoint(videogame: VideogameColabCreate, session: AsyncSession = Depends(get_session)):
+    created = await VideogameOperations.create_videogame(session, videogame.model_dump())
+    return created
 
 @app.put("/videogames/{videogame_id}", response_model=VideogameColabResponse)
-def update_videogame_endpoint(videogame_id: int, videogame_update: VideogameColabUpdate):
-    updated = VideogameOperations.update_videogame(videogame_id, videogame_update.model_dump(exclude_unset=True))
+async def update_videogame_endpoint(videogame_id: int, videogame_update: VideogameColabUpdate, session: AsyncSession = Depends(get_session)):
+    updated = await VideogameOperations.update_videogame(session, videogame_id, videogame_update.model_dump(exclude_unset=True))
     if not updated:
         raise HTTPException(status_code=404, detail="La colaboración en videojuegos no fue actualizada")
     return updated
 
 @app.delete("/videogames/{videogame_id}", response_model=VideogameColabResponse)
-def delete_videogame_endpoint(videogame_id: int):
-    deleted = VideogameOperations.delete_videogame(videogame_id)
+async def delete_videogame_endpoint(videogame_id: int, session: AsyncSession = Depends(get_session)):
+    deleted = await VideogameOperations.delete_videogame(session, videogame_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="La colaboración en videojuegos no fue eliminada")
-    data = deleted.model_dump()
-    data.pop("id", None)
-    return VideogameColabResponse(**data)
+    return deleted
+
+# --- Endpoints básicos ---
+@app.get("/")
+async def root():
+    return {"message": "API de Maquillaje y Videojuegos"}
+
+
+@app.get("/hello/{name}")
+async def say_hello(name: str):
+    return {"message": f"Hola {name}, bienvenido al sistema de gestión"}

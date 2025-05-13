@@ -64,8 +64,9 @@ class VideogameOperations:
 
     @staticmethod
     async def filter_by_recent_date(session: AsyncSession) -> List[VideogameColab]:
-        """Filtra y ordena por fecha más reciente primero"""
-        result = await session.execute(
-            select(VideogameColab).order_by(VideogameColab.fecha_colaboracion.desc())
-        )
-        return result.scalars().all()
+        """Filtra y ordena por fecha más reciente primero (solo como strings)"""
+        result = await session.execute(select(VideogameColab))
+        all_entries = result.scalars().all()
+
+        # Ordenar por string de fecha (formato YYYY-MM-DD)
+        return sorted(all_entries, key=lambda x: x.fecha_colaboracion, reverse=True)
