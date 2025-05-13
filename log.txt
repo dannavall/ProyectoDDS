@@ -8,3 +8,4 @@ Pruebas manuales del endpoint GET /mental_health funcionando correctamente.
 Manejo de errores en endpoints de creación con HTTPException.
 Documentación inicial para endpoints de SocialMedia.
 Cambio de operaciones sincrónicas a asincrónicas con AsyncSession.
+Agregando validadores personalizados a modelos de SocialMediaCreate.
