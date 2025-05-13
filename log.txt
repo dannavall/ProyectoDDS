@@ -2,3 +2,4 @@ Validación cruzada entre social media usage y well-being score.
 Separación de servicios por archivo en carpeta operations/
 Mejoras en formato de fechas para compatibilidad con frontend.
 Fix: error de validación al actualizar registros nulos.
+Creación de índice en base de datos para buscar por edad.
